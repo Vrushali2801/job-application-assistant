@@ -3,188 +3,930 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Application Assistant</title>
+  <title>Job Application Assistant — AI-Powered CV Tailoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'] } } } }</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Inter', sans-serif; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Page background – subtle dot grid */
+    :root {
+      --bg: #09090b;
+      --card: #0f0f13;
+      --card2: #141419;
+      --input-bg: #0c0c0f;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --text: #f4f4f5;
+      --text2: #a1a1aa;
+      --text3: #52525b;
+      --indigo: #6366f1;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+    }
+
     body {
-      background-color: #f1f5f9;
-      background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-      background-size: 26px 26px;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
     }
 
-    /* Header shimmer sweep */
-    @keyframes shimmer {
-      0%   { transform: translateX(-120%) skewX(-15deg); }
-      100% { transform: translateX(220%) skewX(-15deg); }
+    /* ── Shared background ── */
+    .bg-glow { position: fixed; pointer-events: none; z-index: 0; }
+    .bg-glow-top {
+      top: -280px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 700px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.09) 0%, transparent 65%);
     }
-    .header-shimmer {
-      position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    .bg-glow-br {
+      bottom: -150px; right: -100px; width: 500px; height: 500px;
+      background: radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 65%);
     }
-    .header-shimmer::after {
-      content: '';
-      position: absolute; top: 0; left: 0; width: 40%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-      animation: shimmer 3.5s ease-in-out infinite;
-    }
-
-    /* Gradient buttons */
-    .btn-primary {
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      box-shadow: 0 4px 14px rgba(99,102,241,0.28);
-      transition: all 0.2s ease;
-      color: white; font-weight: 600;
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-      box-shadow: 0 8px 22px rgba(99,102,241,0.42);
-      transform: translateY(-1px);
-    }
-    .btn-primary:active:not(:disabled) { transform: translateY(0); }
-    .btn-primary:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
-
-    .btn-export {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      box-shadow: 0 4px 14px rgba(5,150,105,0.28);
-      transition: all 0.2s ease;
-      color: white; font-weight: 600;
-    }
-    .btn-export:hover:not(:disabled) {
-      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-      box-shadow: 0 8px 22px rgba(5,150,105,0.38);
-      transform: translateY(-1px);
-    }
-    .btn-export:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
-
-    /* Animated gradient progress bar */
-    @keyframes barPulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.82; }
-    }
-    .progress-bar {
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #7c3aed);
-      background-size: 200% 100%;
-      transition: width 0.65s cubic-bezier(.4,0,.2,1);
-      animation: barPulse 1.8s ease-in-out infinite;
+    .bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 28px 28px;
     }
 
-    /* Score ring */
-    .score-arc { transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1), stroke 0.4s ease; }
+    .hidden { display: none !important; }
 
-    /* Card reveals */
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up { animation: fadeSlideUp 0.4s ease-out forwards; }
+    /* ════════════════════════════════════════
+       LANDING PAGE
+    ════════════════════════════════════════ */
+    #landing { position: relative; z-index: 1; }
 
-    /* Bullet cards */
-    .bullet-card { transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s; }
-    .bullet-card.selected {
-      border-color: #a5b4fc;
-      box-shadow: 0 0 0 3px rgba(165,180,252,0.2);
+    /* ── Landing Nav ── */
+    .land-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(9,9,11,0.82);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
     }
-    .bullet-card.deselected { opacity: 0.38; }
+    .land-nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 24px; height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .logo-icon {
+      width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 14px rgba(99,102,241,0.45);
+    }
+    .logo-name {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.015em;
+      background: linear-gradient(130deg, #e0e0ff 0%, #a5b4fc 55%, #c4b5fd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .nav-launch {
+      padding: 8px 20px; border: none; border-radius: 9px; cursor: pointer;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff; font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.38);
+      transition: all 0.2s;
+    }
+    .nav-launch:hover { box-shadow: 0 6px 22px rgba(99,102,241,0.52); transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: calc(100vh - 58px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 72px 24px 60px; position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px; pointer-events: none;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.13) 0%, transparent 60%);
+    }
+    .hero-inner { max-width: 760px; text-align: center; position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px; margin-bottom: 28px;
+      padding: 6px 15px; border-radius: 999px;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
+      font-size: 12px; font-weight: 600; color: #a5b4fc;
+    }
+    .hero-badge .bdot {
+      width: 6px; height: 6px; border-radius: 50%; background: #34d399;
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    .hero-title {
+      font-size: clamp(38px, 7vw, 68px);
+      font-weight: 900; letter-spacing: -0.035em; line-height: 1.06; margin-bottom: 22px;
+    }
+    .hero-title .ht-white {
+      background: linear-gradient(135deg, #f4f4f5 0%, #d4d4d8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-title .ht-accent {
+      background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 17px; color: var(--text3); line-height: 1.65;
+      max-width: 520px; margin: 0 auto 38px; font-weight: 400;
+    }
+
+    .hero-btns {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 60px;
+    }
+    .btn-hero-primary {
+      padding: 14px 32px; border: none; border-radius: 12px; cursor: pointer;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff; font-size: 15px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 26px rgba(99,102,241,0.42); transition: all 0.2s;
+    }
+    .btn-hero-primary:hover { box-shadow: 0 8px 38px rgba(99,102,241,0.58); transform: translateY(-2px); }
+    .btn-hero-ghost {
+      padding: 14px 26px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text2); font-size: 15px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;
+    }
+    .btn-hero-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); color: var(--text); }
+
+    /* Stats strip */
+    .hero-stats {
+      display: inline-flex; align-items: stretch;
+      border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+    .stat-item { padding: 14px 30px; text-align: center; border-right: 1px solid var(--border); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-size: 22px; font-weight: 800; color: var(--text); }
+    .stat-num.accent { background: linear-gradient(135deg,#818cf8,#a78bfa); -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; font-weight: 500; }
+
+    /* ── Section shell ── */
+    .land-section { max-width: 1100px; margin: 0 auto; padding: 88px 24px; }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #818cf8;
+    }
+    .section-eyebrow::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: #818cf8; flex-shrink: 0;
+    }
+    .section-title {
+      font-size: clamp(26px, 4vw, 40px); font-weight: 800; letter-spacing: -0.025em;
+      color: var(--text); line-height: 1.15; margin-bottom: 12px;
+    }
+    .section-sub { font-size: 15px; color: var(--text3); max-width: 480px; line-height: 1.65; }
+
+    /* ── Pain points ── */
+    .pain-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1.5px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 20px; overflow: hidden; margin-top: 52px;
+    }
+    @media(max-width:768px) { .pain-grid { grid-template-columns: 1fr; } }
+
+    .pain-card {
+      background: var(--card); padding: 32px 28px; position: relative; overflow: hidden;
+      transition: background 0.2s;
+    }
+    .pain-card:hover { background: var(--card2); }
+    .pain-num {
+      font-size: 52px; font-weight: 900; letter-spacing: -0.04em; line-height: 1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .pain-icon-row {
+      width: 44px; height: 44px; border-radius: 11px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pain-name { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .pain-desc { font-size: 13px; color: var(--text3); line-height: 1.65; }
+    .pain-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    }
+    .pain-card:nth-child(1)::after { background: linear-gradient(90deg,transparent,#f43f5e,transparent); }
+    .pain-card:nth-child(2)::after { background: linear-gradient(90deg,transparent,#f59e0b,transparent); }
+    .pain-card:nth-child(3)::after { background: linear-gradient(90deg,transparent,#6366f1,transparent); }
+
+    /* ── How it works ── */
+    .how-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 24px; margin-top: 52px;
+    }
+    @media(max-width:768px) { .how-grid { grid-template-columns: 1fr; } }
+
+    .how-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; position: relative; overflow: hidden;
+    }
+    .how-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, #6366f1 30%, #8b5cf6 70%, transparent);
+    }
+    .how-step-tag {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text3); margin-bottom: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+    .how-icon {
+      width: 46px; height: 46px; border-radius: 12px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .how-name { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .how-desc { font-size: 13px; color: var(--text3); line-height: 1.65; }
+
+    /* Connector arrows between steps */
+    .how-connector {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text3); margin-top: -10px; margin-bottom: -10px;
+    }
+    @media(max-width:768px) {
+      .how-connector { transform: rotate(90deg); margin: 4px auto; }
+    }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1.5px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 20px;
+      overflow: hidden; margin-top: 52px;
+    }
+    @media(max-width:900px) { .features-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:580px) { .features-grid { grid-template-columns: 1fr; } }
+
+    .feat-card {
+      background: var(--card); padding: 28px 24px;
+      transition: background 0.18s;
+    }
+    .feat-card:hover { background: var(--card2); }
+    .feat-icon {
+      width: 42px; height: 42px; border-radius: 11px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feat-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
+    .feat-desc { font-size: 13px; color: var(--text3); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .land-cta {
+      text-align: center; padding: 80px 24px 110px; position: relative; overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 700px; height: 350px; pointer-events: none;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 65%);
+    }
+    .cta-inner { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; }
+    .cta-title {
+      font-size: clamp(28px, 4.5vw, 48px); font-weight: 900; letter-spacing: -0.03em;
+      line-height: 1.1; margin-bottom: 14px;
+      background: linear-gradient(135deg, #f4f4f5, #a1a1aa 80%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .cta-sub { font-size: 15px; color: var(--text3); margin-bottom: 36px; line-height: 1.6; }
+    .cta-hint { font-size: 12px; color: var(--text3); margin-top: 16px; }
+
+    /* ── Footer ── */
+    .land-footer {
+      border-top: 1px solid var(--border); padding: 24px;
+      text-align: center;
+    }
+    .land-footer p { font-size: 12px; color: var(--text3); }
+
+    /* ════════════════════════════════════════
+       APP SECTION
+    ════════════════════════════════════════ */
+    #appSection { position: relative; z-index: 1; }
+
+    /* ── App Header ── */
+    .app-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(9,9,11,0.82);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .app-header-inner {
+      max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--text3);
+      background: none; border: none; cursor: pointer; padding: 6px 10px;
+      border-radius: 8px; transition: all 0.15s;
+    }
+    .back-btn:hover { color: var(--text2); background: rgba(255,255,255,0.05); }
+    .header-pill {
+      display: flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px;
+      background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);
+    }
+    .header-pill .pulse-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #34d399;
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    .header-pill span { font-size: 11px; font-weight: 600; color: #a5b4fc; }
+
+    /* ── App Main ── */
+    main {
+      position: relative; z-index: 1; max-width: 1180px; margin: 0 auto;
+      padding: 28px 24px 72px;
+    }
+    .two-col {
+      display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start;
+    }
+    @media(min-width:1024px) { .two-col { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Card ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .card-stripe { height: 1px; }
+    .stripe-indigo { background: linear-gradient(90deg,transparent,#6366f1 30%,#8b5cf6 70%,transparent); }
+    .stripe-violet { background: linear-gradient(90deg,transparent,#7c3aed 35%,#a855f7 70%,transparent); }
+    .stripe-amber  { background: linear-gradient(90deg,transparent,#f59e0b 35%,#f97316 70%,transparent); }
+    .stripe-sky    { background: linear-gradient(90deg,transparent,#0ea5e9 35%,#6366f1 70%,transparent); }
+    .stripe-emerald{ background: linear-gradient(90deg,transparent,#059669 35%,#34d399 70%,transparent); }
+    .card-body { padding: 20px 22px; }
+
+    /* Step badge */
+    .step-row { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+    .step-num {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg,#4f46e5,#7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      box-shadow: 0 0 10px rgba(99,102,241,0.4);
+    }
+    .step-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .micro { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); }
+    .card-icon-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .icon-box { width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .ib-indigo { background: rgba(99,102,241,0.14); }
+    .ib-violet { background: rgba(124,58,237,0.14); }
+    .ib-amber  { background: rgba(245,158,11,0.14); }
+    .ib-sky    { background: rgba(14,165,233,0.14); }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 1.5px dashed rgba(99,102,241,0.25); border-radius: 12px;
+      padding: 38px 20px; text-align: center; cursor: pointer;
+      transition: all .2s ease; background: rgba(99,102,241,0.02);
+    }
+    .drop-zone:hover { border-color: rgba(99,102,241,0.55); background: rgba(99,102,241,0.055); }
+    .drop-zone:hover .dz-icon-box { background: rgba(99,102,241,0.15); }
+    .drop-zone:hover .dz-icon { color: #818cf8; }
+    .dz-icon-box {
+      width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; transition: background .2s;
+    }
+    .dz-icon { width: 24px; height: 24px; color: var(--text3); transition: color .2s; }
+    .dz-text { font-size: 13px; color: var(--text2); }
+    .dz-text b { color: #818cf8; font-weight: 600; }
+    .dz-hint { font-size: 11px; color: var(--text3); margin-top: 5px; }
+    .file-row {
+      display: none; align-items: center; gap: 12px;
+      background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);
+      border-radius: 10px; padding: 11px 14px;
+    }
+    .file-check {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: rgba(16,185,129,0.14); display: flex; align-items: center; justify-content: center;
+    }
+    .file-name { font-size: 13px; font-weight: 600; color: var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-sub { font-size: 11px; color: #34d399; font-weight: 500; margin-top:2px; }
+    .file-clear { padding: 5px; border-radius: 6px; border: none; cursor: pointer; background: none; color: var(--text3); flex-shrink: 0; transition: all .15s; }
+    .file-clear:hover { color: #fb7185; background: rgba(244,63,94,0.1); }
+
+    /* Tab toggle */
+    .tabs { display: flex; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+    .tab { padding: 5px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .15s; background: none; color: var(--text3); }
+    .tab.on { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+    .tab:not(.on):hover { color: var(--text2); }
+
+    /* Inputs */
+    .field-ta {
+      width: 100%; padding: 12px 14px; background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'Inter',sans-serif; font-size: 13px;
+      line-height: 1.6; resize: none; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .field-ta::placeholder { color: var(--text3); }
+    .field-ta:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .url-wrap { position: relative; }
+    .url-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events:none; }
+    .field-url {
+      width: 100%; padding: 11px 14px 11px 36px; background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'Inter',sans-serif; font-size: 13px; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field-url::placeholder { color: var(--text3); }
+    .field-url:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .url-hint { font-size: 11px; color: var(--text3); margin-top: 7px; padding-left: 2px; }
+
+    /* Buttons */
+    .btn-analyse {
+      width: 100%; padding: 13px 20px; border: none; border-radius: 12px; cursor: pointer;
+      background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 22px rgba(99,102,241,0.38); transition: all .2s ease;
+    }
+    .btn-analyse:hover:not(:disabled) { box-shadow: 0 8px 32px rgba(99,102,241,0.54); transform: translateY(-1px); }
+    .btn-analyse:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; color: var(--text3); }
+    .btn-green {
+      flex:1; padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg,#059669,#047857); color: #fff; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      box-shadow: 0 4px 16px rgba(5,150,105,0.32); transition: all .2s;
+    }
+    .btn-green:hover:not(:disabled) { box-shadow: 0 8px 26px rgba(5,150,105,0.48); transform: translateY(-1px); }
+    .btn-green:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; color: var(--text3); }
+    .btn-blue {
+      flex:1; padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg,#0ea5e9,#6366f1); color: #fff; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      box-shadow: 0 4px 16px rgba(14,165,233,0.28); transition: all .2s;
+    }
+    .btn-blue:hover:not(:disabled) { box-shadow: 0 8px 26px rgba(99,102,241,0.44); transform: translateY(-1px); }
+    .btn-blue:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; color: var(--text3); }
+    .btn-purple {
+      width: 100%; padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.32); transition: all .2s;
+    }
+    .btn-purple:hover:not(:disabled) { box-shadow: 0 8px 26px rgba(124,58,237,0.48); transform: translateY(-1px); }
+    .btn-purple:disabled { background: rgba(255,255,255,0.07); box-shadow: none; cursor: not-allowed; color: var(--text3); }
+    .btn-copy-sm {
+      display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #38bdf8;
+      background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2);
+      border-radius: 7px; padding: 5px 12px; cursor: pointer; transition: all .15s;
+    }
+    .btn-copy-sm:hover { background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.35); }
+
+    /* Idle */
+    .idle-wrap {
+      background: var(--card); border: 1.5px dashed var(--border); border-radius: 16px;
+      padding: 56px 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    .idle-glow { position: absolute; pointer-events: none; border-radius: 50%; }
+    .idle-glow-a { top:-50px;right:-50px;width:180px;height:180px;background:radial-gradient(circle,rgba(99,102,241,0.1),transparent 70%); }
+    .idle-glow-b { bottom:-50px;left:-50px;width:140px;height:140px;background:radial-gradient(circle,rgba(139,92,246,0.08),transparent 70%); }
+    .idle-icon {
+      width: 60px; height: 60px; border-radius: 16px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+    }
+    .idle-title { font-size: 14px; font-weight: 700; color: var(--text2); }
+    .idle-sub { font-size: 12px; color: var(--text3); margin-top: 6px; line-height: 1.55; }
+    .idle-steps { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
+    .idle-step { display: flex; align-items: center; gap: 6px; }
+    .idle-snum {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.22);
+      display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #818cf8;
+    }
+    .idle-slabel { font-size: 11px; color: var(--text3); font-weight: 500; }
+
+    /* Loading */
+    .loading-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .load-top {
+      height: 2px; background: linear-gradient(90deg,#6366f1,#8b5cf6,#7c3aed); background-size: 200% 100%;
+      animation: moveBar 1.8s ease-in-out infinite; transition: width .65s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes moveBar { 0%,100%{background-position:200% 0} 50%{background-position:-200% 0} }
+    .load-body { padding: 34px 28px 26px; }
+    .spinner-wrap { position:relative; width:52px; height:52px; margin:0 auto 18px; }
+    .sp-track { position:absolute; inset:0; border-radius:50%; border:4px solid rgba(255,255,255,0.06); }
+    .sp-1 { position:absolute; inset:0; border-radius:50%; border:4px solid transparent; border-top-color:#6366f1; animation:spin .9s linear infinite; }
+    .sp-2 { position:absolute; inset:6px; border-radius:50%; border:3px solid transparent; border-bottom-color:rgba(139,92,246,.45); animation:spin 1.4s linear infinite reverse; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .load-msg { font-size:14px; font-weight:600; color:var(--text); text-align:center; }
+    .load-sub { font-size:12px; color:var(--text3); text-align:center; margin-top:4px; }
+    .prog-track { width:100%; height:4px; border-radius:999px; background:rgba(255,255,255,0.06); margin:18px 0 9px; overflow:hidden; }
+    .prog-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#6366f1,#8b5cf6); transition:width .65s cubic-bezier(.4,0,.2,1); }
+    .step-labels { display:flex; justify-content:space-between; }
+    .sl { font-size:9px; color:var(--text3); font-weight:500; }
+    .sl.done { color:#6366f1; }
+    .sl.active { color:#a5b4fc; font-weight:700; }
+
+    /* Results cards */
+    .co-text { font-size:13px; color:var(--text2); line-height:1.65; }
+    .score-arc { transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1), stroke .4s ease; }
+    .score-num { font-size:34px; font-weight:800; line-height:1; }
+    .score-den { font-size:11px; color:var(--text3); margin-top:2px; }
+    .match-pill { display:inline-flex; align-items:center; font-size:11px; font-weight:700; padding:4px 11px; border-radius:999px; margin-bottom:13px; }
+    .chip { display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; margin:2px 3px 2px 0; }
+    .ch-green { background:rgba(16,185,129,.1); color:#34d399; border:1px solid rgba(16,185,129,.2); }
+    .ch-red   { background:rgba(244,63,94,.1);  color:#fb7185; border:1px solid rgba(244,63,94,.2); }
+    .ch-indigo{ background:rgba(99,102,241,.11); color:#a5b4fc; border:1px solid rgba(99,102,241,.22); }
+    .ats-divider { height:1px; background:var(--border); margin:16px 0 10px; }
+    .ats-row { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,0.025); border:1px solid var(--border); margin-bottom:6px; }
+    .ats-dot { width:6px; height:6px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .ats-dot.g { background:#10b981; box-shadow:0 0 6px rgba(16,185,129,.5); }
+    .ats-dot.a { background:#f59e0b; box-shadow:0 0 6px rgba(245,158,11,.5); }
+    .ats-dot.r { background:#f43f5e; box-shadow:0 0 6px rgba(244,63,94,.5); }
+    .ats-kw { font-size:12px; font-weight:700; color:var(--text); }
+    .ats-ctx { font-size:11px; color:var(--text3); margin-top:2px; line-height:1.4; }
+    .badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; display:inline-block; }
+    .bg-green { background:rgba(16,185,129,.1); color:#34d399; border:1px solid rgba(16,185,129,.22); }
+    .bg-amber { background:rgba(245,158,11,.1); color:#fbbf24; border:1px solid rgba(245,158,11,.22); }
+    .bg-red   { background:rgba(244,63,94,.1);  color:#fb7185; border:1px solid rgba(244,63,94,.22); }
+    .bg-gray  { background:rgba(255,255,255,.06); color:var(--text3); border:1px solid var(--border); }
+    .gap-item { display:flex; gap:11px; padding:11px 13px; background:rgba(245,158,11,.04); border:1px solid rgba(245,158,11,.14); border-radius:10px; margin-bottom:8px; }
+    .gap-tag { font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; background:rgba(245,158,11,.12); color:#fbbf24; border:1px solid rgba(245,158,11,.25); white-space:nowrap; height:fit-content; margin-top:1px; flex-shrink:0; }
+    .gap-text { font-size:12px; color:var(--text2); line-height:1.55; }
+    .bullet-card { border:1.5px solid rgba(99,102,241,.14); border-radius:12px; overflow:hidden; margin-bottom:10px; background:var(--card); transition:border-color .2s,box-shadow .2s,opacity .2s; }
+    .bullet-card.selected { border-color:rgba(99,102,241,.32); box-shadow:0 0 0 1px rgba(99,102,241,.08); }
+    .bullet-card.deselected { opacity:.33; }
+    .bc-head { display:flex; align-items:center; justify-content:space-between; padding:9px 13px; background:rgba(255,255,255,.02); border-bottom:1px solid var(--border); gap:8px; flex-wrap:wrap; }
+    .bc-chk-label { display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
+    .bc-chk-label input { width:13px; height:13px; cursor:pointer; accent-color:#6366f1; }
+    .bc-chk-text { font-size:11px; font-weight:600; color:var(--text3); }
+    .bc-kw { font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(99,102,241,.1); color:#a5b4fc; border:1px solid rgba(99,102,241,.2); }
+    .bc-cols { display:grid; grid-template-columns:1fr 1fr; }
+    .bc-before { padding:13px; }
+    .bc-after  { padding:13px; background:rgba(99,102,241,.03); border-left:1px solid var(--border); }
+    .bc-col-head { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+    .bc-bar { width:3px; height:12px; border-radius:999px; }
+    .bc-bar.b { background:rgba(255,255,255,.14); }
+    .bc-bar.a { background:#6366f1; }
+    .bc-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+    .bc-lbl.b { color:var(--text3); }
+    .bc-lbl.a { color:#818cf8; }
+    .bc-txt-b { font-size:12px; color:var(--text3); line-height:1.55; }
+    .bc-txt-a { font-size:12px; color:#e0e7ff; font-weight:600; line-height:1.55; }
+    .bc-copy { display:flex; align-items:center; gap:4px; font-size:10px; font-weight:600; color:#818cf8; background:none; border:none; cursor:pointer; padding:4px 7px; border-radius:6px; transition:all .15s; }
+    .bc-copy:hover { background:rgba(99,102,241,.1); color:#a5b4fc; }
+    .bc-reason { padding:8px 13px; border-top:1px solid var(--border); background:rgba(255,255,255,.012); font-size:11px; color:var(--text3); font-style:italic; }
+    .cl-body { font-size:13px; color:var(--text2); line-height:1.75; white-space:pre-wrap; background:rgba(255,255,255,.02); border:1px solid var(--border); border-radius:10px; padding:17px 19px; }
+
+    /* Toast */
+    .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100; background:#160a0a; color:#fca5a5; border:1px solid rgba(244,63,94,.28); border-radius:12px; padding:12px 18px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 32px rgba(0,0,0,.55); max-width:360px; width:92vw; }
+    .toast-msg { font-size:13px; font-weight:500; line-height:1.4; flex:1; }
+    .toast-close { background:none; border:none; cursor:pointer; color:rgba(252,165,165,.4); }
+    .toast-close:hover { color:#fca5a5; }
+
+    /* Misc */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .fade-up { animation:fadeUp .35s ease-out forwards; }
+    @keyframes pulseGlow { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.45)} 50%{opacity:.8;box-shadow:0 0 0 4px rgba(52,211,153,0)} }
+    .row-split { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .stack { display:flex; flex-direction:column; gap:18px; }
+    .count-pill { font-size:10px; font-weight:700; color:#818cf8; background:rgba(99,102,241,.11); border:1px solid rgba(99,102,241,.2); padding:2px 8px; border-radius:999px; }
+    .include-hint { font-size:10px; color:var(--text3); background:rgba(255,255,255,.04); padding:4px 10px; border-radius:999px; }
+
+    /* Page transitions */
+    #landing, #appSection { transition: opacity 0.35s ease, transform 0.35s ease; }
   </style>
 </head>
-<body class="min-h-screen">
+<body>
 
-  <!-- Toast Error -->
-  <div id="errorBanner"
-       class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white
-              px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm w-[92vw]">
-    <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+<!-- Shared background -->
+<div class="bg-glow bg-glow-top"></div>
+<div class="bg-glow bg-glow-br"></div>
+<div class="bg-grid"></div>
+
+<!-- Toast -->
+<div id="errorBanner" class="toast hidden">
+  <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" style="flex-shrink:0">
+    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+  </svg>
+  <span id="errorMessage" class="toast-msg"></span>
+  <button class="toast-close" onclick="hideError()">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
     </svg>
-    <span id="errorMessage" class="text-sm font-medium flex-1 leading-snug"></span>
-    <button onclick="hideError()" class="text-white/60 hover:text-white shrink-0 transition-colors">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
+  </button>
+</div>
 
-  <!-- Header -->
-  <header class="sticky top-0 z-40 shadow-xl" style="background: linear-gradient(135deg, #312e81 0%, #4f46e5 45%, #6d28d9 100%);">
-    <div class="header-shimmer"></div>
-    <div class="relative max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-             style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);">
-          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+<!-- ═══════════════════════════════════════════════
+     LANDING PAGE
+═══════════════════════════════════════════════ -->
+<div id="landing">
+
+  <!-- Nav -->
+  <nav class="land-nav">
+    <div class="land-nav-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
           </svg>
         </div>
-        <div>
-          <h1 class="text-base font-bold text-white tracking-tight leading-tight">Job Application Assistant</h1>
-          <p class="text-indigo-200 text-xs mt-0.5">Upload CV · paste job posting · get AI-tailored rewrites</p>
+        <span class="logo-name">Job Application Assistant</span>
+      </div>
+      <button class="nav-launch" onclick="launchApp()">
+        Launch App →
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="bdot"></span>
+        AI-Powered · Free to use
+      </div>
+
+      <h1 class="hero-title">
+        <span class="ht-white">Stop applying blindly.</span><br>
+        <span class="ht-accent">Start landing interviews.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Upload your CV, paste a job description, and get a fit score, ATS keyword analysis,
+        rewritten bullet points, gap suggestions, and a cover letter — all in under a minute.
+      </p>
+
+      <div class="hero-btns">
+        <button class="btn-hero-primary" onclick="launchApp()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Get Started — It's Free
+        </button>
+        <button class="btn-hero-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">
+          See how it works ↓
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num accent">&lt; 60s</div>
+          <div class="stat-lbl">Full analysis</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num accent">6</div>
+          <div class="stat-lbl">AI pipeline steps</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num accent">100%</div>
+          <div class="stat-lbl">Private — session only</div>
         </div>
       </div>
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full"
-           style="background: rgba(255,255,255,0.13); backdrop-filter: blur(8px);">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-xs text-white/80 font-semibold tracking-wide">AI Powered</span>
+    </div>
+  </section>
+
+  <!-- Pain Points -->
+  <section style="position:relative;z-index:1">
+    <div class="land-section" style="padding-bottom:0">
+      <div class="section-eyebrow">The Problem</div>
+      <h2 class="section-title">The hiring process is broken.<br>We fix your end of it.</h2>
+      <p class="section-sub">Most job applications fail before a human ever reads them. Here's what's happening.</p>
+    </div>
+    <div class="land-section" style="padding-top:0">
+      <div class="pain-grid">
+
+        <div class="pain-card">
+          <div class="pain-icon-row" style="background:rgba(244,63,94,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fb7185" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="pain-num">01</p>
+          <h3 class="pain-name">The Manual Edit Loop</h3>
+          <p class="pain-desc">You spend hours tweaking your CV for every role — changing keywords, reordering bullets, adjusting tone — while the job posting expires. There's no time and no clear signal of what actually matters.</p>
+        </div>
+
+        <div class="pain-card">
+          <div class="pain-icon-row" style="background:rgba(245,158,11,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+          </div>
+          <p class="pain-num">02</p>
+          <h3 class="pain-name">The Silent Rejection</h3>
+          <p class="pain-desc">You never hear back — not even a rejection. Your application looks fine to you, but small misalignments in language, missing keywords, or weak phrasing quietly bury it before it reaches a hiring manager.</p>
+        </div>
+
+        <div class="pain-card">
+          <div class="pain-icon-row" style="background:rgba(99,102,241,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <p class="pain-num">03</p>
+          <h3 class="pain-name">The ATS Black Hole</h3>
+          <p class="pain-desc">Over 75% of CVs are rejected by applicant tracking systems before a human sees them. ATS software scores your CV against the job description — and most people have no idea how they're being evaluated.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" style="position:relative;z-index:1">
+    <div class="land-section" style="padding-bottom:0">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">Three steps to a tailored application.</h2>
+      <p class="section-sub">No setup, no account, no waiting. Drop in your CV and a job posting and get results instantly.</p>
+    </div>
+    <div class="land-section" style="padding-top:40px">
+      <div class="how-grid">
+
+        <div class="how-card">
+          <div class="how-step-tag">Step 01</div>
+          <div class="how-icon" style="background:rgba(99,102,241,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+          </div>
+          <h3 class="how-name">Upload your CV</h3>
+          <p class="how-desc">Drop your PDF and our parser extracts every section, bullet, skill, and role automatically. No copy-pasting, no reformatting — it reads exactly what you have.</p>
+        </div>
+
+        <div class="how-card">
+          <div class="how-step-tag">Step 02</div>
+          <div class="how-icon" style="background:rgba(14,165,233,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#38bdf8" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3 class="how-name">Paste the job</h3>
+          <p class="how-desc">Paste the full job description or just drop in a URL — we'll fetch the page for you. The more detail, the better the analysis. LinkedIn URLs may need copy-pasting.</p>
+        </div>
+
+        <div class="how-card">
+          <div class="how-step-tag">Step 03</div>
+          <div class="how-icon" style="background:rgba(16,185,129,0.12)">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="how-name">Get your edge</h3>
+          <p class="how-desc">Receive a fit score, rewritten bullet points, ATS keyword breakdown, skill-gap suggestions, a personalised cover letter, and a downloadable resume — all tailored to that specific role.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section style="position:relative;z-index:1">
+    <div class="land-section" style="padding-bottom:0">
+      <div class="section-eyebrow">What you get</div>
+      <h2 class="section-title">Everything you need to apply with confidence.</h2>
+      <p class="section-sub">Six AI-powered outputs, generated in a single pass, in under a minute.</p>
+    </div>
+    <div class="land-section" style="padding-top:40px">
+      <div class="features-grid">
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(245,158,11,0.12)">
+            <svg width="20" height="20" fill="#fbbf24" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">Fit Score</h3>
+          <p class="feat-desc">A 0–100 score showing how well your profile matches the role, with a colour-coded match label — Great, Fair, or Needs Work — so you know where you stand immediately.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(99,102,241,0.12)">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">ATS Keyword Analysis</h3>
+          <p class="feat-desc">See the top 8–10 keywords from the job description flagged as Strong, Weak, or Absent in your CV — with a note on whether each keyword is required or preferred by the employer.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(139,92,246,0.12)">
+            <svg width="20" height="20" fill="#a78bfa" viewBox="0 0 20 20">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">CV Bullet Rewrites</h3>
+          <p class="feat-desc">Only the bullets that genuinely benefit from a change are rewritten. Language is sharpened to reflect the role's priorities, without inventing skills or inflating metrics.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(244,63,94,0.12)">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fb7185" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">Gap Suggestions</h3>
+          <p class="feat-desc">For each skill gap, you get a specific, buildable project idea relevant to your background — not generic advice to "take a course". Concrete things you can actually add to your portfolio.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(14,165,233,0.12)">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#38bdf8" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">Cover Letter</h3>
+          <p class="feat-desc">A focused 3-paragraph letter built from your actual CV achievements, referencing specific details from the job description. No stale openers, no fluff, no hallucinated skills.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon" style="background:rgba(16,185,129,0.12)">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3 class="feat-name">Resume Editor &amp; PDF</h3>
+          <p class="feat-desc">Your rewritten resume opens in a live editor — click any text to edit, then download as a clean, professional PDF. The tailored rewrites are already spliced in.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="land-cta" style="position:relative;z-index:1">
+    <div class="cta-glow"></div>
+    <div class="cta-inner">
+      <h2 class="cta-title">Ready to stand out?</h2>
+      <p class="cta-sub">No account needed. No credit card. Just upload your CV and get to work.</p>
+      <button class="btn-hero-primary" style="margin:0 auto;display:inline-flex" onclick="launchApp()">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        Get Started — It's Free
+      </button>
+      <p class="cta-hint">Analyse your first CV in under a minute</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="land-footer" style="position:relative;z-index:1">
+    <p>Job Application Assistant · AI-powered CV tailoring · All processing happens in your session</p>
+  </footer>
+
+</div><!-- /landing -->
+
+
+<!-- ═══════════════════════════════════════════════
+     APP SECTION
+═══════════════════════════════════════════════ -->
+<div id="appSection" class="hidden">
+
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div style="display:flex;align-items:center;gap:16px">
+        <button class="back-btn" onclick="showLanding()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Home
+        </button>
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <span class="logo-name">Job Application Assistant</span>
+        </div>
+      </div>
+      <div class="header-pill">
+        <span class="pulse-dot"></span>
+        <span>AI Powered</span>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="max-w-6xl mx-auto px-6 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-7 items-start">
+  <main>
+    <div class="two-col">
 
-      <!-- ===== LEFT: INPUTS ===== -->
-      <div class="space-y-4">
+      <!-- LEFT -->
+      <div class="stack">
 
-        <!-- Step 1: Upload -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <!-- Accent strip -->
-          <div class="h-0.5" style="background: linear-gradient(90deg, #6366f1, #7c3aed)"></div>
-          <div class="px-6 pt-5 pb-5">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
-                   style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">1</div>
-              <span class="text-sm font-semibold text-slate-800">Upload your CV</span>
+        <!-- Upload -->
+        <div class="card">
+          <div class="card-stripe stripe-indigo"></div>
+          <div class="card-body">
+            <div class="step-row">
+              <div class="step-num">1</div>
+              <span class="step-title">Upload your CV</span>
             </div>
-
-            <div id="dropZone"
-                 class="relative border-2 border-dashed border-slate-200 rounded-xl p-9 text-center cursor-pointer
-                        transition-all duration-200 hover:border-indigo-400 group"
-                 style="transition: background 0.2s, border-color 0.2s;"
+            <div id="dropZone" class="drop-zone"
                  ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
                  onclick="document.getElementById('fileInput').click()">
-
               <div id="dropDefault">
-                <div class="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center transition-all
-                            bg-slate-100 group-hover:bg-indigo-100 shadow-inner">
-                  <svg class="w-7 h-7 text-slate-400 group-hover:text-indigo-500 transition-colors"
-                       fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                <div class="dz-icon-box">
+                  <svg class="dz-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
                   </svg>
                 </div>
-                <p class="text-sm text-slate-600">Drop your CV here, or <span class="font-semibold text-indigo-600">browse files</span></p>
-                <p class="text-xs text-slate-400 mt-1.5">PDF only</p>
+                <p class="dz-text">Drop your CV here, or <b>browse files</b></p>
+                <p class="dz-hint">PDF only</p>
               </div>
-
-              <div id="dropSelected" class="hidden items-center justify-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-                  <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <div id="dropSelected" class="file-row">
+                <div class="file-check">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
-                <div class="text-left min-w-0 flex-1">
-                  <p id="fileName" class="text-sm font-semibold text-slate-800 truncate"></p>
-                  <p class="text-xs text-emerald-600 mt-0.5 font-medium">Ready to analyse</p>
+                <div style="flex:1;min-width:0">
+                  <div id="fileName" class="file-name"></div>
+                  <div class="file-sub">Ready to analyse</div>
                 </div>
-                <button onclick="clearFile(event)"
-                        class="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <button onclick="clearFile(event)" class="file-clear">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
                 </button>
@@ -194,548 +936,631 @@
           </div>
         </div>
 
-        <!-- Step 2: Job Description -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div class="h-0.5" style="background: linear-gradient(90deg, #6366f1, #7c3aed)"></div>
-          <div class="px-6 pt-5 pb-5">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
-                   style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">2</div>
-              <span class="text-sm font-semibold text-slate-800">Paste the job description</span>
+        <!-- Job Description -->
+        <div class="card">
+          <div class="card-stripe stripe-indigo"></div>
+          <div class="card-body">
+            <div class="row-split" style="margin-bottom:16px">
+              <div class="step-row" style="margin-bottom:0">
+                <div class="step-num">2</div>
+                <span class="step-title">Job description</span>
+              </div>
+              <div class="tabs">
+                <button id="tabText" class="tab on" onclick="switchJobTab('text')">Paste text</button>
+                <button id="tabUrl"  class="tab"    onclick="switchJobTab('url')">Job URL</button>
+              </div>
             </div>
-            <textarea id="jobDescription" rows="11"
-              class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-700 resize-none
-                     placeholder:text-slate-400 leading-relaxed
-                     focus:outline-none focus:ring-2 focus:border-transparent transition"
-              style="--tw-ring-color: rgba(99,102,241,0.35);"
-              onfocus="this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.2)'"
-              onblur="this.style.boxShadow=''"
-              placeholder="Paste the full job posting here — the more detail, the better the rewrites..."></textarea>
+            <div id="jobTextPanel">
+              <textarea id="jobDescription" rows="11" class="field-ta"
+                placeholder="Paste the full job posting here — the more detail, the better the rewrites..."></textarea>
+            </div>
+            <div id="jobUrlPanel" class="hidden">
+              <div class="url-wrap">
+                <svg class="url-icon" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+                <input id="jobUrl" type="url" class="field-url" placeholder="https://company.com/careers/job-title" />
+              </div>
+              <p class="url-hint">Works best with static job pages. Login-protected pages (e.g. LinkedIn) may not load — paste the text instead.</p>
+            </div>
           </div>
         </div>
 
-        <!-- Analyse Button -->
-        <button id="analyseBtn" onclick="startAnalysis()"
-          class="btn-primary w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 text-sm">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        <!-- Analyse -->
+        <button id="analyseBtn" class="btn-analyse" onclick="startAnalysis()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
           </svg>
           Analyse My CV
         </button>
       </div>
 
-      <!-- ===== RIGHT: RESULTS ===== -->
-      <div class="space-y-4">
+      <!-- RIGHT -->
+      <div class="stack">
 
-        <!-- Idle Placeholder -->
-        <div id="idlePlaceholder" class="relative overflow-hidden bg-white rounded-2xl border-2 border-dashed border-slate-200 p-14 text-center shadow-sm">
-          <div class="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-indigo-50 blur-3xl opacity-70"></div>
-          <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-violet-50 blur-3xl opacity-70"></div>
-          <div class="relative">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 shadow-inner flex items-center justify-center">
-              <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.3">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/>
+        <!-- Idle -->
+        <div id="idlePlaceholder" class="idle-wrap">
+          <div class="idle-glow idle-glow-a"></div>
+          <div class="idle-glow idle-glow-b"></div>
+          <div style="position:relative">
+            <div class="idle-icon">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.18)" stroke-width="1.3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/>
               </svg>
             </div>
-            <p class="text-sm font-bold text-slate-600">Results will appear here</p>
-            <p class="text-xs text-slate-400 mt-2 leading-relaxed">Upload your CV and paste a job description,<br>then click <span class="font-semibold text-slate-500">Analyse My CV</span></p>
-            <div class="flex items-center justify-center gap-2 mt-7">
-              <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[9px] font-bold text-indigo-600">1</div>
-                <span class="text-[11px] text-slate-500 font-medium">Upload</span>
-              </div>
-              <svg class="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
-              <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[9px] font-bold text-indigo-600">2</div>
-                <span class="text-[11px] text-slate-500 font-medium">Paste job</span>
-              </div>
-              <svg class="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
-              <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[9px] font-bold text-indigo-600">3</div>
-                <span class="text-[11px] text-slate-500 font-medium">Analyse</span>
-              </div>
+            <p class="idle-title">Results will appear here</p>
+            <p class="idle-sub">Upload your CV and paste a job description,<br>then click <strong style="color:var(--text2)">Analyse My CV</strong></p>
+            <div class="idle-steps">
+              <div class="idle-step"><div class="idle-snum">1</div><span class="idle-slabel">Upload</span></div>
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="var(--text3)" stroke-width="2.5" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <div class="idle-step"><div class="idle-snum">2</div><span class="idle-slabel">Paste job</span></div>
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="var(--text3)" stroke-width="2.5" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <div class="idle-step"><div class="idle-snum">3</div><span class="idle-slabel">Analyse</span></div>
             </div>
           </div>
         </div>
 
-        <!-- Loading Card -->
-        <div id="loadingCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="h-1 progress-bar" id="progressBarTop" style="width:0%; transition: width 0.65s cubic-bezier(.4,0,.2,1);"></div>
-          <div class="p-8">
-            <div class="flex flex-col items-center mb-7">
-              <!-- Dual-ring spinner -->
-              <div class="relative w-14 h-14 mb-5">
-                <div class="absolute inset-0 rounded-full border-[5px] border-slate-100"></div>
-                <div class="absolute inset-0 rounded-full border-[5px] border-indigo-600 border-t-transparent animate-spin"></div>
-                <div class="absolute inset-[6px] rounded-full border-4 border-violet-300/50 border-b-transparent animate-spin"
-                     style="animation-duration:1.4s; animation-direction:reverse;"></div>
+        <!-- Loading -->
+        <div id="loadingCard" class="loading-wrap hidden">
+          <div class="load-top" id="progressBarTop" style="width:0%"></div>
+          <div class="load-body">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="spinner-wrap">
+                <div class="sp-track"></div><div class="sp-1"></div><div class="sp-2"></div>
               </div>
-              <p id="loadingMsg" class="text-sm font-semibold text-slate-700 text-center"></p>
-              <p class="text-xs text-slate-400 mt-1">Usually takes 20–40 seconds</p>
+              <p id="loadingMsg" class="load-msg"></p>
+              <p class="load-sub">Usually takes 15–25 seconds</p>
             </div>
-            <!-- Progress bar -->
-            <div class="w-full bg-slate-100 rounded-full h-2 mb-3 overflow-hidden">
-              <div id="progressBar" class="h-2 rounded-full progress-bar" style="width:0%"></div>
-            </div>
-            <!-- Step labels -->
-            <div class="flex justify-between px-0.5">
-              <span class="step-label text-[10px] text-slate-400" id="stepLabel0">Extract</span>
-              <span class="step-label text-[10px] text-slate-400" id="stepLabel1">Research</span>
-              <span class="step-label text-[10px] text-slate-400" id="stepLabel2">Fit score</span>
-              <span class="step-label text-[10px] text-slate-400" id="stepLabel3">Suggest</span>
-              <span class="step-label text-[10px] text-slate-400" id="stepLabel4">Rewrite</span>
+            <div class="prog-track"><div id="progressBar" class="prog-fill" style="width:0%"></div></div>
+            <div class="step-labels">
+              <span class="sl" id="stepLabel0">Extract</span>
+              <span class="sl" id="stepLabel1">Research · Analyse</span>
+              <span class="sl" id="stepLabel2">Suggest · Rewrite</span>
+              <span class="sl" id="stepLabel3">Cover letter</span>
             </div>
           </div>
         </div>
 
-        <!-- Company Card -->
-        <div id="companyCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-up">
-          <div class="h-1" style="background: linear-gradient(90deg, #7c3aed, #a855f7)"></div>
-          <div class="p-6">
-            <div class="flex items-center gap-2.5 mb-3">
-              <div class="w-6 h-6 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-                <svg class="w-3.5 h-3.5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+        <!-- Company -->
+        <div id="companyCard" class="card hidden fade-up">
+          <div class="card-stripe stripe-violet"></div>
+          <div class="card-body">
+            <div class="card-icon-row">
+              <div class="icon-box ib-violet">
+                <svg width="13" height="13" fill="#a78bfa" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
                 </svg>
               </div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Company Overview</p>
+              <span class="micro">Company Overview</span>
             </div>
-            <p id="companyText" class="text-sm text-slate-600 leading-relaxed"></p>
+            <p id="companyText" class="co-text"></p>
           </div>
         </div>
 
-        <!-- Fit Score Card -->
-        <div id="fitCard" class="hidden rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-up"
-             style="background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 60%, #faf5ff 100%);">
-          <div class="h-1" style="background: linear-gradient(90deg, #f59e0b, #f97316)"></div>
-          <div class="p-6">
-            <div class="flex items-center gap-2.5 mb-5">
-              <div class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+        <!-- Fit Score -->
+        <div id="fitCard" class="card hidden fade-up" style="background:linear-gradient(135deg,var(--card) 0%,rgba(18,18,26,1) 100%)">
+          <div class="card-stripe stripe-amber"></div>
+          <div class="card-body">
+            <div class="card-icon-row">
+              <div class="icon-box ib-amber">
+                <svg width="13" height="13" fill="#fbbf24" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                 </svg>
               </div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fit Score</p>
+              <span class="micro">Fit Score</span>
             </div>
-
-            <div class="flex items-center gap-7">
-              <!-- Score ring -->
-              <div class="relative w-32 h-32 shrink-0">
-                <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="9"/>
-                  <circle id="scoreRing" cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="9"
-                          stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"
-                          class="score-arc"/>
+            <div style="display:flex;align-items:center;gap:22px">
+              <div style="position:relative;width:108px;height:108px;flex-shrink:0">
+                <svg viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                  <circle id="scoreRing" cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="8"
+                          stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" class="score-arc"/>
                 </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span id="fitScore" class="text-4xl font-extrabold leading-none"></span>
-                  <span class="text-xs text-slate-400 font-medium mt-0.5">/100</span>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span id="fitScore" class="score-num"></span>
+                  <span class="score-den">/100</span>
                 </div>
               </div>
-
-              <div class="flex-1 min-w-0">
-                <div id="matchLabel" class="inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full mb-4"></div>
-                <div class="space-y-3.5">
-                  <div>
-                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-2">Strong Matches</p>
-                    <div id="strongMatches" class="flex flex-wrap gap-1.5"></div>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">Skill Gaps</p>
-                    <div id="skillGaps" class="flex flex-wrap gap-1.5"></div>
-                  </div>
+              <div style="flex:1;min-width:0">
+                <div id="matchLabel" class="match-pill"></div>
+                <div style="margin-bottom:11px">
+                  <p class="micro" style="color:rgba(52,211,153,.7);margin-bottom:7px">Strong Matches</p>
+                  <div id="strongMatches"></div>
+                </div>
+                <div>
+                  <p class="micro" style="color:rgba(251,113,133,.7);margin-bottom:7px">Skill Gaps</p>
+                  <div id="skillGaps"></div>
                 </div>
               </div>
+            </div>
+            <div id="atsSection" class="hidden">
+              <div class="ats-divider"></div>
+              <p class="micro" style="margin-bottom:9px">ATS Keyword Analysis</p>
+              <div id="atsKeywords"></div>
             </div>
           </div>
         </div>
 
-        <!-- Suggestions Card -->
-        <div id="suggestionsCard" class="hidden rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-up"
-             style="background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);">
-          <div class="h-1" style="background: linear-gradient(90deg, #f59e0b, #f97316)"></div>
-          <div class="p-6">
-            <div class="flex items-center gap-2.5 mb-4">
-              <div class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <!-- Suggestions -->
+        <div id="suggestionsCard" class="card hidden fade-up" style="background:linear-gradient(135deg,rgba(17,17,20,1),rgba(20,18,12,1))">
+          <div class="card-stripe stripe-amber"></div>
+          <div class="card-body">
+            <div class="card-icon-row">
+              <div class="icon-box ib-amber">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
               </div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">How to close the gaps</p>
+              <span class="micro">How to close the gaps</span>
             </div>
-            <div id="suggestionsList" class="space-y-3"></div>
+            <div id="suggestionsList"></div>
           </div>
         </div>
 
-        <!-- Bullets Card -->
-        <div id="bulletsCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-up">
-          <div class="h-1" style="background: linear-gradient(90deg, #4f46e5, #7c3aed)"></div>
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-5">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
-                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+        <!-- Bullets -->
+        <div id="bulletsCard" class="card hidden fade-up">
+          <div class="card-stripe stripe-indigo"></div>
+          <div class="card-body">
+            <div class="row-split" style="margin-bottom:18px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="icon-box ib-indigo">
+                  <svg width="13" height="13" fill="#818cf8" viewBox="0 0 20 20">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                   </svg>
                 </div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CV Rewrites</p>
-                <span id="bulletsCount" class="text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full"></span>
+                <span class="micro">CV Rewrites</span>
+                <span id="bulletsCount" class="count-pill"></span>
               </div>
-              <span class="text-[10px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-medium hidden sm:block">
-                Check to include in export
-              </span>
+              <span class="include-hint">Check to include in export</span>
             </div>
-            <div id="bulletsList" class="space-y-3"></div>
+            <div id="bulletsList"></div>
           </div>
         </div>
 
-        <!-- Copy All Button -->
-        <button id="copyAllBtn" onclick="copyAll()"
-          class="btn-export hidden w-full py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 text-sm fade-up">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-          </svg>
-          Copy All Selected
-        </button>
-      </div>
+        <!-- Cover Letter -->
+        <div id="coverLetterCard" class="card hidden fade-up">
+          <div class="card-stripe stripe-sky"></div>
+          <div class="card-body">
+            <div class="row-split" style="margin-bottom:15px">
+              <div class="card-icon-row" style="margin-bottom:0">
+                <div class="icon-box ib-sky">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#38bdf8" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <span class="micro">Cover Letter</span>
+              </div>
+              <button id="copyCoverBtn" class="btn-copy-sm" onclick="copyCoverLetter()">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Copy
+              </button>
+            </div>
+            <div id="coverLetterText" class="cl-body"></div>
+          </div>
+        </div>
 
+        <!-- Actions -->
+        <div id="actionBtns" class="hidden fade-up">
+          <div style="display:flex;gap:10px;margin-bottom:10px">
+            <button id="copyAllBtn" class="btn-green" onclick="copyAll()">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Copy Rewrites
+            </button>
+            <button id="exportBtn" class="btn-blue" onclick="exportPdf()">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Download Report
+            </button>
+          </div>
+          <button id="editResumeBtn" class="btn-purple" onclick="editResume()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit &amp; Download Resume
+          </button>
+        </div>
+
+      </div>
     </div>
   </main>
+</div><!-- /appSection -->
 
-  <script>
-    const API = window.location.origin;
-    let selectedFile = null;
-    let rewrittenBullets = [];
+<script>
+/* ── Page transitions ── */
+function launchApp() {
+  const land = document.getElementById('landing');
+  land.style.opacity = '0';
+  land.style.transform = 'translateY(-8px)';
+  setTimeout(() => {
+    land.classList.add('hidden');
+    const app = document.getElementById('appSection');
+    app.classList.remove('hidden');
+    app.style.opacity = '0';
+    app.style.transform = 'translateY(8px)';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        app.style.opacity = '1';
+        app.style.transform = 'translateY(0)';
+      });
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, 320);
+}
 
-    // ---- File handling ----
-    function onFileSelect(e) { if (e.target.files[0]) setFile(e.target.files[0]); }
-    function onDragOver(e) {
-      e.preventDefault();
-      const z = document.getElementById('dropZone');
-      z.style.borderColor = '#818cf8';
-      z.style.background = 'rgba(238,242,255,0.6)';
-    }
-    function onDragLeave(e) {
-      const z = document.getElementById('dropZone');
-      z.style.borderColor = '';
-      z.style.background = '';
-    }
-    function onDrop(e) {
-      e.preventDefault();
-      onDragLeave(e);
-      if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-    }
-    function setFile(file) {
-      selectedFile = file;
-      document.getElementById('dropDefault').classList.add('hidden');
-      document.getElementById('dropSelected').classList.remove('hidden');
-      document.getElementById('dropSelected').classList.add('flex');
-      document.getElementById('fileName').textContent = file.name;
-    }
-    function clearFile(e) {
-      e.stopPropagation();
-      selectedFile = null;
-      document.getElementById('fileInput').value = '';
-      document.getElementById('dropDefault').classList.remove('hidden');
-      document.getElementById('dropSelected').classList.add('hidden');
-      document.getElementById('dropSelected').classList.remove('flex');
-    }
+function showLanding() {
+  const app = document.getElementById('appSection');
+  app.style.opacity = '0';
+  app.style.transform = 'translateY(-8px)';
+  setTimeout(() => {
+    app.classList.add('hidden');
+    const land = document.getElementById('landing');
+    land.classList.remove('hidden');
+    land.style.opacity = '0';
+    land.style.transform = 'translateY(8px)';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        land.style.opacity = '1';
+        land.style.transform = 'translateY(0)';
+      });
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, 320);
+}
 
-    // ---- Step progress ----
-    const STEP_MAP = {
-      'Extracting information...': { pct: 14, idx: 0 },
-      'Researching company...':    { pct: 33, idx: 1 },
-      'Analysing fit...':          { pct: 52, idx: 2 },
-      'Generating suggestions...': { pct: 71, idx: 3 },
-      'Rewriting bullets...':      { pct: 90, idx: 4 },
-    };
+/* ── App logic ── */
+const API = window.location.origin;
+let selectedFile = null;
+let rewrittenBullets = [];
+let activeJobTab = 'text';
+let analysisResult = {};
 
-    function updateProgress(msg) {
-      const info = STEP_MAP[msg];
-      if (!info) return;
-      document.getElementById('progressBar').style.width = info.pct + '%';
-      document.getElementById('progressBarTop').style.width = info.pct + '%';
-      document.getElementById('loadingMsg').textContent = msg;
-      for (let i = 0; i < 5; i++) {
-        const el = document.getElementById('stepLabel' + i);
-        if (i < info.idx)        el.className = 'step-label text-[10px] text-indigo-400 font-medium';
-        else if (i === info.idx) el.className = 'step-label text-[10px] text-indigo-600 font-bold';
-        else                     el.className = 'step-label text-[10px] text-slate-400';
+function switchJobTab(tab) {
+  activeJobTab = tab;
+  const isUrl = tab === 'url';
+  document.getElementById('jobTextPanel').classList.toggle('hidden', isUrl);
+  document.getElementById('jobUrlPanel').classList.toggle('hidden', !isUrl);
+  document.getElementById('tabText').classList.toggle('on', !isUrl);
+  document.getElementById('tabUrl').classList.toggle('on', isUrl);
+}
+
+function onFileSelect(e) { if (e.target.files[0]) setFile(e.target.files[0]); }
+function onDragOver(e) {
+  e.preventDefault();
+  const z = document.getElementById('dropZone');
+  z.style.borderColor = 'rgba(99,102,241,0.6)';
+  z.style.background  = 'rgba(99,102,241,0.06)';
+}
+function onDragLeave(e) {
+  const z = document.getElementById('dropZone');
+  z.style.borderColor = ''; z.style.background = '';
+}
+function onDrop(e) {
+  e.preventDefault(); onDragLeave(e);
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+}
+function setFile(file) {
+  selectedFile = file;
+  document.getElementById('dropDefault').classList.add('hidden');
+  const sel = document.getElementById('dropSelected');
+  sel.classList.remove('hidden'); sel.style.display = 'flex';
+  document.getElementById('fileName').textContent = file.name;
+}
+function clearFile(e) {
+  e.stopPropagation(); selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropDefault').classList.remove('hidden');
+  const sel = document.getElementById('dropSelected');
+  sel.classList.add('hidden'); sel.style.display = '';
+}
+
+const STEP_COUNT = 4;
+const STEP_MAP = {
+  'Extracting information...':            { pct: 12, idx: 0 },
+  'Researching & analysing...':           { pct: 35, idx: 1 },
+  'Generating suggestions & rewrites...': { pct: 65, idx: 2 },
+  'Writing cover letter...':              { pct: 88, idx: 3 },
+};
+
+function updateProgress(msg) {
+  const info = STEP_MAP[msg]; if (!info) return;
+  document.getElementById('progressBar').style.width    = info.pct + '%';
+  document.getElementById('progressBarTop').style.width = info.pct + '%';
+  document.getElementById('loadingMsg').textContent = msg;
+  for (let i = 0; i < STEP_COUNT; i++) {
+    document.getElementById('stepLabel' + i).className =
+      i < info.idx ? 'sl done' : i === info.idx ? 'sl active' : 'sl';
+  }
+}
+function finishProgress() {
+  document.getElementById('progressBar').style.width    = '100%';
+  document.getElementById('progressBarTop').style.width = '100%';
+  for (let i = 0; i < STEP_COUNT; i++)
+    document.getElementById('stepLabel' + i).className = 'sl done';
+}
+
+async function startAnalysis() {
+  if (!selectedFile) { showError('Please upload a CV file first.'); return; }
+  const form = new FormData();
+  form.append('cv_file', selectedFile);
+  if (activeJobTab === 'url') {
+    const url = document.getElementById('jobUrl').value.trim();
+    if (!url) { showError('Please enter a job URL.'); return; }
+    form.append('job_url', url);
+  } else {
+    const jd = document.getElementById('jobDescription').value.trim();
+    if (!jd) { showError('Please paste a job description.'); return; }
+    form.append('job_description', jd);
+  }
+  rewrittenBullets = []; analysisResult = {};
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  ['companyCard','fitCard','suggestionsCard','bulletsCard','coverLetterCard'].forEach(id =>
+    document.getElementById(id).classList.add('hidden'));
+  document.getElementById('actionBtns').classList.add('hidden');
+  document.getElementById('idlePlaceholder').classList.add('hidden');
+  document.getElementById('progressBar').style.width    = '0%';
+  document.getElementById('progressBarTop').style.width = '0%';
+  for (let i = 0; i < STEP_COUNT; i++) document.getElementById('stepLabel' + i).className = 'sl';
+  document.getElementById('loadingMsg').textContent = '';
+  document.getElementById('loadingCard').classList.remove('hidden');
+  try {
+    const res = await fetch(`${API}/analyse`, { method:'POST', body:form });
+    if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.detail||`Server error ${res.status}`); }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream:true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (line.trim()) { try { handleEvent(JSON.parse(line)); } catch(_) {} }
       }
     }
+  } catch(err) {
+    document.getElementById('loadingCard').classList.add('hidden');
+    document.getElementById('idlePlaceholder').classList.remove('hidden');
+    showError('Analysis failed: ' + err.message);
+  } finally { btn.disabled = false; }
+}
 
-    function finishProgress() {
-      document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('progressBarTop').style.width = '100%';
-      for (let i = 0; i < 5; i++) {
-        document.getElementById('stepLabel' + i).className = 'step-label text-[10px] text-indigo-400 font-medium';
+function handleEvent(data) {
+  switch(data.type) {
+    case 'progress': updateProgress(data.step); break;
+    case 'cv_text': analysisResult.cv_text = data.data || ''; break;
+    case 'extracted_info':
+      analysisResult.company_name = (data.data||{}).company_name || '';
+      analysisResult.role_title   = (data.data||{}).role_title   || '';
+      break;
+    case 'company_info':
+      analysisResult.company_info = data.data || '';
+      if (data.data) {
+        document.getElementById('companyText').textContent = data.data;
+        document.getElementById('companyCard').classList.remove('hidden');
       }
-    }
-
-    // ---- Analysis ----
-    async function startAnalysis() {
-      if (!selectedFile) { showError('Please upload a CV file first.'); return; }
-      const jobDesc = document.getElementById('jobDescription').value.trim();
-      if (!jobDesc) { showError('Please paste a job description.'); return; }
-
-      rewrittenBullets = [];
-      const btn = document.getElementById('analyseBtn');
-      btn.disabled = true;
-
-      ['companyCard', 'fitCard', 'suggestionsCard', 'bulletsCard'].forEach(id => document.getElementById(id).classList.add('hidden'));
-      document.getElementById('copyAllBtn').classList.add('hidden');
-      document.getElementById('idlePlaceholder').classList.add('hidden');
-      document.getElementById('progressBar').style.width = '0%';
-      document.getElementById('progressBarTop').style.width = '0%';
-      for (let i = 0; i < 5; i++) {
-        document.getElementById('stepLabel' + i).className = 'step-label text-[10px] text-slate-400';
+      break;
+    case 'fit_analysis': {
+      const fit = data.data || {};
+      analysisResult.match_score    = fit.match_score;
+      analysisResult.strong_matches = fit.strong_matches || [];
+      analysisResult.skill_gaps     = fit.skill_gaps     || [];
+      analysisResult.ats_keywords   = fit.ats_keywords   || [];
+      const score = fit.match_score ?? 0;
+      const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#f43f5e';
+      requestAnimationFrame(() => {
+        const ring = document.getElementById('scoreRing');
+        ring.style.strokeDashoffset = 251.2 * (1 - score / 100);
+        ring.style.stroke  = color;
+        ring.style.filter  = `drop-shadow(0 0 8px ${color}55)`;
+      });
+      const scoreEl = document.getElementById('fitScore');
+      scoreEl.textContent = score; scoreEl.style.color = color;
+      const lbl = document.getElementById('matchLabel');
+      lbl.className = 'match-pill';
+      if (score >= 75) {
+        lbl.textContent = '✦ Great match';
+        lbl.style.cssText = 'background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.25)';
+      } else if (score >= 50) {
+        lbl.textContent = '◈ Fair match';
+        lbl.style.cssText = 'background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25)';
+      } else {
+        lbl.textContent = '▲ Needs work';
+        lbl.style.cssText = 'background:rgba(244,63,94,.12);color:#fb7185;border:1px solid rgba(244,63,94,.25)';
       }
-      document.getElementById('loadingMsg').textContent = '';
-      document.getElementById('loadingCard').classList.remove('hidden');
-
-      const form = new FormData();
-      form.append('cv_file', selectedFile);
-      form.append('job_description', jobDesc);
-
-      try {
-        const res = await fetch(`${API}/analyse`, { method: 'POST', body: form });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.detail || `Server error ${res.status}`);
-        }
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split('\n');
-          buf = lines.pop();
-          for (const line of lines) {
-            if (line.trim()) { try { handleEvent(JSON.parse(line)); } catch (_) {} }
-          }
-        }
-      } catch (err) {
-        document.getElementById('loadingCard').classList.add('hidden');
-        document.getElementById('idlePlaceholder').classList.remove('hidden');
-        showError('Analysis failed: ' + err.message);
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    function handleEvent(data) {
-      switch (data.type) {
-        case 'progress':
-          updateProgress(data.step);
-          break;
-
-        case 'company_info':
-          if (data.data) {
-            document.getElementById('companyText').textContent = data.data;
-            document.getElementById('companyCard').classList.remove('hidden');
-          }
-          break;
-
-        case 'fit_analysis': {
-          const fit = data.data || {};
-          const score = fit.match_score ?? 0;
-          const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#f43f5e';
-
-          requestAnimationFrame(() => {
-            const ring = document.getElementById('scoreRing');
-            ring.style.strokeDashoffset = 251.2 * (1 - score / 100);
-            ring.style.stroke = color;
-          });
-
-          const scoreEl = document.getElementById('fitScore');
-          scoreEl.textContent = score;
-          scoreEl.style.color = color;
-
-          const labelEl = document.getElementById('matchLabel');
-          if (score >= 75) {
-            labelEl.textContent = '✦ Great match';
-            labelEl.className = 'inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full mb-4 bg-emerald-100 text-emerald-700';
-          } else if (score >= 50) {
-            labelEl.textContent = '◈ Fair match';
-            labelEl.className = 'inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full mb-4 bg-amber-100 text-amber-700';
-          } else {
-            labelEl.textContent = '▲ Needs work';
-            labelEl.className = 'inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full mb-4 bg-rose-100 text-rose-600';
-          }
-
-          document.getElementById('strongMatches').innerHTML =
-            (fit.strong_matches || []).map(s =>
-              `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded-full font-medium">${esc(s)}</span>`
-            ).join('');
-
-          document.getElementById('skillGaps').innerHTML =
-            (fit.skill_gaps || []).map(s =>
-              `<span class="bg-rose-50 text-rose-600 border border-rose-200 text-xs px-2.5 py-1 rounded-full font-medium">${esc(s)}</span>`
-            ).join('');
-
-          document.getElementById('fitCard').classList.remove('hidden');
-          break;
-        }
-
-        case 'gap_suggestions': {
-          const suggestions = data.data || [];
-          if (suggestions.length > 0) {
-            document.getElementById('suggestionsList').innerHTML = suggestions.map(s => `
-              <div class="flex gap-3 p-3.5 bg-white/70 rounded-xl border border-amber-100">
-                <div class="shrink-0 mt-0.5">
-                  <span class="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">${esc(s.skill)}</span>
-                </div>
-                <p class="text-sm text-slate-600 leading-relaxed">${esc(s.suggestion)}</p>
-              </div>`).join('');
-            document.getElementById('suggestionsCard').classList.remove('hidden');
-          }
-          break;
-        }
-
-        case 'rewritten_bullets':
-          rewrittenBullets = (data.data || []).map(b => ({ ...b, _selected: true }));
-          renderBullets(rewrittenBullets);
-          document.getElementById('bulletsCard').classList.remove('hidden');
-          if (rewrittenBullets.length > 0) document.getElementById('copyAllBtn').classList.remove('hidden');
-          break;
-
-        case 'done':
-          finishProgress();
-          document.getElementById('loadingCard').classList.add('hidden');
-          break;
-
-        case 'error':
-          document.getElementById('loadingCard').classList.add('hidden');
-          document.getElementById('idlePlaceholder').classList.remove('hidden');
-          document.getElementById('copyAllBtn').classList.add('hidden');
-          showError(data.message || 'Analysis failed.');
-          break;
-      }
-    }
-
-    function toggleBullet(el, i) {
-      rewrittenBullets[i]._selected = el.checked;
-      const card = document.getElementById('bc-' + i);
-      card.classList.toggle('selected', el.checked);
-      card.classList.toggle('deselected', !el.checked);
-    }
-
-    function renderBullets(bullets) {
-      document.getElementById('bulletsCount').textContent = bullets.length > 0 ? `${bullets.length}` : '';
-      if (bullets.length === 0) {
-        document.getElementById('bulletsList').innerHTML = `
-          <div class="flex flex-col items-center py-6 text-center gap-2">
-            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-              <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-              </svg>
+      document.getElementById('strongMatches').innerHTML =
+        (fit.strong_matches||[]).map(s=>`<span class="chip ch-green">${esc(s)}</span>`).join('');
+      document.getElementById('skillGaps').innerHTML =
+        (fit.skill_gaps||[]).map(s=>`<span class="chip ch-red">${esc(s)}</span>`).join('');
+      const kws = fit.ats_keywords || [];
+      if (kws.length) {
+        const dc={strong:'g',weak:'a',absent:'r'}, bc={strong:'bg-green',weak:'bg-amber',absent:'bg-red'}, bl={strong:'Strong',weak:'Weak',absent:'Absent'};
+        document.getElementById('atsKeywords').innerHTML = kws.map(k => {
+          const d=dc[k.status]||'r', b=bc[k.status]||'bg-red', l=bl[k.status]||'Absent';
+          return `<div class="ats-row">
+            <div class="ats-dot ${d}"></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+                <span class="ats-kw">${esc(k.keyword)}</span>
+                <span class="badge ${b}">${l}</span>
+                <span class="badge bg-gray">${esc(k.job_weight||'')}</span>
+              </div>
+              <p class="ats-ctx">${esc(k.context||'')}</p>
             </div>
-            <p class="text-sm font-semibold text-slate-700">Your CV is already well-matched</p>
-            <p class="text-xs text-slate-400">No bullets needed rewriting for this role.</p>
           </div>`;
-        return;
+        }).join('');
+        document.getElementById('atsSection').classList.remove('hidden');
       }
-      document.getElementById('bulletsList').innerHTML = bullets.map((b, i) => `
-        <div class="bullet-card selected rounded-2xl border-2 border-indigo-100 bg-white overflow-hidden"
-             id="bc-${i}" style="animation: fadeSlideUp 0.35s ease-out ${i * 0.06}s both;">
+      document.getElementById('fitCard').classList.remove('hidden');
+      break;
+    }
+    case 'gap_suggestions': {
+      const sugg = data.data || [];
+      analysisResult.gap_suggestions = sugg;
+      if (sugg.length) {
+        document.getElementById('suggestionsList').innerHTML = sugg.map(s =>
+          `<div class="gap-item"><span class="gap-tag">${esc(s.skill)}</span><p class="gap-text">${esc(s.suggestion)}</p></div>`
+        ).join('');
+        document.getElementById('suggestionsCard').classList.remove('hidden');
+      }
+      break;
+    }
+    case 'rewritten_bullets':
+      rewrittenBullets = (data.data||[]).map(b=>({...b,_selected:true}));
+      analysisResult.rewritten_bullets = data.data || [];
+      renderBullets(rewrittenBullets);
+      document.getElementById('bulletsCard').classList.remove('hidden');
+      break;
+    case 'cover_letter':
+      analysisResult.cover_letter = data.data || '';
+      if (data.data) {
+        document.getElementById('coverLetterText').textContent = data.data;
+        document.getElementById('coverLetterCard').classList.remove('hidden');
+      }
+      break;
+    case 'done':
+      finishProgress();
+      document.getElementById('loadingCard').classList.add('hidden');
+      document.getElementById('actionBtns').classList.remove('hidden');
+      break;
+    case 'error':
+      document.getElementById('loadingCard').classList.add('hidden');
+      document.getElementById('idlePlaceholder').classList.remove('hidden');
+      showError(data.message || 'Analysis failed.');
+      break;
+  }
+}
 
-          <!-- Header -->
-          <div class="flex items-center justify-between px-4 py-3 bg-slate-50/60 border-b border-slate-100 gap-3 flex-wrap">
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" checked onchange="toggleBullet(this, ${i})"
-                     class="w-4 h-4 rounded border-slate-300 accent-indigo-600 cursor-pointer" />
-              <span class="text-xs font-semibold text-slate-600">Include in export</span>
-            </label>
-            ${(b.keywords_added || []).length ? `
-              <div class="flex gap-1 flex-wrap">
-                ${b.keywords_added.map(k =>
-                  `<span class="bg-indigo-50 text-indigo-600 border border-indigo-200 text-[10px] px-2 py-0.5 rounded-full font-bold">+${esc(k)}</span>`
-                ).join('')}
-              </div>` : ''}
-          </div>
+function toggleBullet(el, i) {
+  rewrittenBullets[i]._selected = el.checked;
+  const card = document.getElementById('bc-' + i);
+  card.classList.toggle('selected', el.checked);
+  card.classList.toggle('deselected', !el.checked);
+}
 
-          <!-- Before / After -->
-          <div class="grid grid-cols-2 divide-x divide-slate-100">
-            <div class="p-4">
-              <div class="flex items-center gap-1.5 mb-2.5">
-                <div class="w-1 h-3.5 rounded-full bg-slate-300"></div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Before</p>
-              </div>
-              <p class="text-sm text-slate-500 leading-relaxed">${esc(b.original || '')}</p>
-            </div>
-            <div class="p-4 bg-indigo-50/50">
-              <div class="flex items-center justify-between mb-2.5">
-                <div class="flex items-center gap-1.5">
-                  <div class="w-1 h-3.5 rounded-full bg-indigo-500"></div>
-                  <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">After</p>
-                </div>
-                <button onclick="copyBullet(this, ${i})"
-                        class="flex items-center gap-1 text-[10px] font-semibold text-indigo-400 hover:text-indigo-600
-                               hover:bg-indigo-100 px-2 py-1 rounded-lg transition-colors">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                  </svg>
-                  Copy
-                </button>
-              </div>
-              <p class="text-sm text-indigo-900 leading-relaxed font-semibold">${esc(b.rewritten || '')}</p>
-            </div>
-          </div>
-
-          ${b.reason ? `
-          <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50/40">
-            <p class="text-xs text-slate-400 italic">${esc(b.reason)}</p>
-          </div>` : ''}
+function renderBullets(bullets) {
+  document.getElementById('bulletsCount').textContent = bullets.length > 0 ? `${bullets.length}` : '';
+  if (!bullets.length) {
+    document.getElementById('bulletsList').innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;padding:24px;text-align:center;gap:8px">
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </div>
-      `).join('');
-    }
+        <p style="font-size:13px;font-weight:600;color:var(--text2)">Your CV is already well-matched</p>
+        <p style="font-size:12px;color:var(--text3)">No bullets needed rewriting for this role.</p>
+      </div>`;
+    return;
+  }
+  document.getElementById('bulletsList').innerHTML = bullets.map((b, i) => `
+    <div class="bullet-card selected" id="bc-${i}" style="animation:fadeUp .35s ease-out ${i*.06}s both">
+      <div class="bc-head">
+        <label class="bc-chk-label">
+          <input type="checkbox" checked onchange="toggleBullet(this,${i})" />
+          <span class="bc-chk-text">Include in export</span>
+        </label>
+        ${(b.keywords_added||[]).length ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${b.keywords_added.map(k=>`<span class="bc-kw">+${esc(k)}</span>`).join('')}</div>` : ''}
+      </div>
+      <div class="bc-cols">
+        <div class="bc-before">
+          <div class="bc-col-head"><div class="bc-bar b"></div><span class="bc-lbl b">Before</span></div>
+          <p class="bc-txt-b">${esc(b.original||'')}</p>
+        </div>
+        <div class="bc-after">
+          <div class="bc-col-head" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="bc-bar a"></div><span class="bc-lbl a">After</span>
+            </div>
+            <button onclick="copyBullet(this,${i})" class="bc-copy">
+              <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Copy
+            </button>
+          </div>
+          <p class="bc-txt-a">${esc(b.rewritten||'')}</p>
+        </div>
+      </div>
+      ${b.reason ? `<div class="bc-reason">${esc(b.reason)}</div>` : ''}
+    </div>`).join('');
+}
 
-    // ---- Copy ----
-    async function copyBullet(btn, i) {
-      const text = rewrittenBullets[i]?.rewritten || '';
-      await navigator.clipboard.writeText(text);
-      const orig = btn.innerHTML;
-      btn.innerHTML = `<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!`;
-      btn.classList.add('text-emerald-600', 'bg-emerald-50');
-      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('text-emerald-600', 'bg-emerald-50'); }, 1800);
-    }
+async function copyBullet(btn, i) {
+  await navigator.clipboard.writeText(rewrittenBullets[i]?.rewritten || '');
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!`;
+  btn.style.color = '#34d399';
+  setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
+}
+async function copyCoverLetter() {
+  await navigator.clipboard.writeText(document.getElementById('coverLetterText').textContent || '');
+  const btn = document.getElementById('copyCoverBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!`;
+  btn.style.color = '#34d399'; btn.style.borderColor = 'rgba(52,211,153,.3)';
+  setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 1800);
+}
+async function copyAll() {
+  const sel = rewrittenBullets.filter(b => b._selected !== false);
+  if (!sel.length) { showError('Select at least one bullet to copy.'); return; }
+  await navigator.clipboard.writeText(sel.map(b => b.rewritten || b.original).join('\n\n'));
+  const btn = document.getElementById('copyAllBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!`;
+  setTimeout(() => { btn.innerHTML = orig; }, 2000);
+}
+async function editResume() {
+  const btn = document.getElementById('editResumeBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="animation:spin .9s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Building editor…`;
+  try {
+    const selected = rewrittenBullets.filter(b => b._selected !== false);
+    const res = await fetch(`${API}/build-resume`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ cv_text: analysisResult.cv_text || '', rewritten_bullets: selected }),
+    });
+    if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.detail||'Failed'); }
+    const html = await res.text();
+    const win = window.open('','_blank');
+    win.document.open(); win.document.write(html); win.document.close();
+  } catch(err) { showError('Resume editor failed: ' + err.message); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+async function exportPdf() {
+  const btn = document.getElementById('exportBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="animation:spin .9s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generating…`;
+  try {
+    const res = await fetch(`${API}/export-pdf`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(analysisResult),
+    });
+    if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.detail||'Export failed'); }
+    const blob = await res.blob();
+    const company = (analysisResult.company_name||'analysis').replace(/\s+/g,'_');
+    const role    = (analysisResult.role_title   ||'report').replace(/\s+/g,'_');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${company}_${role}_analysis.pdf`;
+    a.click(); URL.revokeObjectURL(a.href);
+  } catch(err) { showError('Export failed: ' + err.message); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+}
 
-    async function copyAll() {
-      const selected = rewrittenBullets.filter(b => b._selected !== false);
-      if (!selected.length) { showError('Select at least one bullet to copy.'); return; }
-      const text = selected.map(b => b.rewritten || b.original).join('\n\n');
-      await navigator.clipboard.writeText(text);
-      const btn = document.getElementById('copyAllBtn');
-      const orig = btn.innerHTML;
-      btn.innerHTML = `
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg> Copied to clipboard!`;
-      setTimeout(() => { btn.innerHTML = orig; }, 2000);
-    }
-
-    // ---- Helpers ----
-    function showError(msg) {
-      document.getElementById('errorMessage').textContent = msg;
-      document.getElementById('errorBanner').classList.remove('hidden');
-      setTimeout(hideError, 6000);
-    }
-    function hideError() { document.getElementById('errorBanner').classList.add('hidden'); }
-    function esc(text) {
-      const d = document.createElement('div');
-      d.appendChild(document.createTextNode(String(text)));
-      return d.innerHTML;
-    }
-  </script>
+function showError(msg) {
+  document.getElementById('errorMessage').textContent = msg;
+  document.getElementById('errorBanner').classList.remove('hidden');
+  setTimeout(hideError, 6000);
+}
+function hideError() { document.getElementById('errorBanner').classList.add('hidden'); }
+function esc(text) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(text)));
+  return d.innerHTML;
+}
+</script>
 </body>
 </html>

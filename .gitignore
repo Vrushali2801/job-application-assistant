@@ -11,3 +11,6 @@ wheels/
 
 # Environment variables — never commit this
 .env
+
+# Claude Code project settings
+.claude/

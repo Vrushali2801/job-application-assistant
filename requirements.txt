@@ -31,6 +31,8 @@ duckduckgo-search==8.1.1
     # via job-application-assistant
 fastapi==0.136.3
     # via job-application-assistant
+greenlet==3.5.1
+    # via playwright
 groq==0.37.1
     # via langchain-groq
 h11==0.16.0
@@ -44,6 +46,7 @@ httptools==0.8.0
 httpx==0.28.1
     # via
     #   groq
+    #   job-application-assistant
     #   langgraph-sdk
     #   langsmith
 idna==3.17
@@ -83,7 +86,9 @@ langgraph-sdk==0.3.15
 langsmith==0.8.7
     # via langchain-core
 lxml==6.1.1
-    # via duckduckgo-search
+    # via
+    #   duckduckgo-search
+    #   job-application-assistant
 orjson==3.11.9
     # via
     #   langgraph-sdk
@@ -94,6 +99,8 @@ packaging==26.2
     # via
     #   langchain-core
     #   langsmith
+playwright==1.60.0
+    # via job-application-assistant
 primp==1.3.1
     # via duckduckgo-search
 pydantic==2.13.4
@@ -106,6 +113,8 @@ pydantic==2.13.4
     #   langsmith
 pydantic-core==2.46.4
     # via pydantic
+pyee==13.0.1
+    # via playwright
 pymupdf==1.27.2.3
     # via job-application-assistant
 python-dotenv==1.2.2
@@ -139,6 +148,7 @@ typing-extensions==4.15.0
     #   langchain-protocol
     #   pydantic
     #   pydantic-core
+    #   pyee
     #   starlette
     #   typing-inspection
 typing-inspection==0.4.2
