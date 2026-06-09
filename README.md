@@ -7,7 +7,7 @@ Upload your CV (PDF) and paste a job description (or drop in a URL). The app ana
 - **Fit score** — 0–100 match score with strong matches and skill gaps highlighted
 - **ATS keyword analysis** — top 8–10 keywords from the job description rated Strong / Weak / Absent in your CV, with required vs preferred weight
 - **Company overview** — auto-researched from the web
-- **Gap suggestions** — concrete project ideas you could build to demonstrate missing skills (no filler advice, no "take a course")
+- **Gap suggestions** — concrete project ideas you could build to demonstrate missing skills 
 - **Selective CV rewrites** — only bullets that genuinely benefit from a change are rewritten; keywords are never forced in if they don't fit the candidate's background
 - **Cover letter** — 3-paragraph letter grounded in your actual CV, referencing specific details from the job posting
 - **Resume editor + PDF download** — live in-browser editor with rewrites already spliced in; download as a clean, professional PDF
