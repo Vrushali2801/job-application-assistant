@@ -612,30 +612,18 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
 <script>
 const API = '{api_base}';
 
-async function downloadPdf() {{
-  const btn = document.getElementById('dlBtn');
-  btn.textContent = 'Generating…';
-  btn.disabled = true;
-  try {{
-    const html = buildPrintHtml();
-    const res = await fetch(API + '/resume-pdf', {{
-      method: 'POST',
-      headers: {{'Content-Type': 'application/json'}},
-      body: JSON.stringify({{html}}),
-    }});
-    if (!res.ok) throw new Error(await res.text());
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '{_he(s.get("name","resume")).replace(" ","_")}_resume.pdf';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }} catch(e) {{
-    alert('PDF failed: ' + e.message);
-  }} finally {{
-    btn.textContent = 'Download PDF';
-    btn.disabled = false;
-  }}
+function downloadPdf() {{
+  const html = buildPrintHtml();
+  const blob = new Blob([html], {{type: 'text/html'}});
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (!w) {{ alert('Allow pop-ups for this site to download the PDF.'); return; }}
+  w.addEventListener('load', () => {{
+    setTimeout(() => {{
+      w.print();
+      URL.revokeObjectURL(url);
+    }}, 300);
+  }});
 }}
 
 function buildPrintHtml() {{
