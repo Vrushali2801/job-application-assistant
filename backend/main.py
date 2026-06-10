@@ -445,10 +445,7 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     skills_section = f"""
       <div class="cv-section">
         <div class="cv-section-title">Technical Skills</div>
-        <div class="cv-skills-row">
-          <span class="cv-skill-label">Skills</span>
-          <span contenteditable="true" class="cv-skill-content">{_he(s.get("skills",""))}</span>
-        </div>
+        <div contenteditable="true" class="cv-body-text">{_he(s.get("skills",""))}</div>
       </div>""" if s.get("skills") else ""
 
     projects_section = f"""
@@ -466,34 +463,34 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     # CSS for PDF/print export — plain string so braces don't need escaping
     print_css = (
         "*{box-sizing:border-box;margin:0;padding:0}\n"
-        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:11px;color:#000}\n"
+        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:#000}\n"
         ".cv-page{padding:12mm 14mm}\n"
         ".cv-header{text-align:center;border-bottom:1px solid #9ca3af;padding-bottom:.5rem;margin-bottom:.65rem}\n"
         ".cv-name{display:block;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
-        "font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}\n"
+        "font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}\n"
         ".cv-title-line{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:9px;color:#4b5563;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}\n"
+        "font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}\n"
         ".cv-contact-line{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:9px;color:#4b5563;margin-top:5px}\n"
+        "font-size:11px;color:#4b5563;margin-top:5px}\n"
         ".cv-section{margin-top:.65rem}\n"
         ".cv-section-title{font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
-        "font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
+        "font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
         "border-bottom:1px solid #9ca3af;padding-bottom:2px;margin-bottom:.35rem}\n"
-        ".cv-body-text{font-size:11px;line-height:1.5;color:#374151}\n"
+        ".cv-body-text{font-size:13px;line-height:1.5;color:#374151}\n"
         ".cv-exp{margin-bottom:.4rem}.cv-edu{margin-bottom:.35rem}.cv-project{margin-bottom:.35rem}\n"
         ".cv-exp-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}\n"
-        ".cv-company{font-size:11px;font-weight:700}\n"
+        ".cv-company{font-size:13px;font-weight:700}\n"
         ".cv-meta{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:9px;color:#4b5563;white-space:nowrap;flex-shrink:0}\n"
-        ".cv-jobtitle{font-size:11px;font-weight:600;font-style:italic;margin-top:.1rem;color:#374151}\n"
+        "font-size:11px;color:#4b5563;white-space:nowrap;flex-shrink:0}\n"
+        ".cv-jobtitle{font-size:13px;font-weight:600;font-style:italic;margin-top:.1rem;color:#374151}\n"
         ".cv-bullets{list-style:disc;padding-left:1.1rem;margin-top:.2rem}\n"
-        ".cv-bullet{font-size:11px;line-height:1.5;color:#374151;margin-bottom:.1rem}\n"
-        ".cv-proj-desc{font-size:11px;line-height:1.5;color:#374151;margin-top:.1rem}\n"
+        ".cv-bullet{font-size:13px;line-height:1.5;color:#374151;margin-bottom:.1rem}\n"
+        ".cv-proj-desc{font-size:13px;line-height:1.5;color:#374151;margin-top:.1rem}\n"
         ".cv-keywords{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:9px;color:#4b5563;margin-top:.2rem}\n"
+        "font-size:11px;color:#4b5563;margin-top:.2rem}\n"
         ".cv-skills-row{display:flex;gap:.5rem;align-items:flex-start}\n"
-        ".cv-skill-label{font-weight:700;width:100px;flex-shrink:0;font-size:11px}\n"
-        ".cv-skill-content{font-size:11px;line-height:1.5;color:#374151;flex:1}"
+        ".cv-skill-label{font-weight:700;width:100px;flex-shrink:0;font-size:13px}\n"
+        ".cv-skill-content{font-size:13px;line-height:1.5;color:#374151;flex:1}"
     )
 
     return f"""<!DOCTYPE html>
@@ -510,10 +507,10 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     --text-secondary: #374151;
     --text-tertiary: #4b5563;
     --border-primary: #9ca3af;
-    --font-base: 11px;
-    --font-name: 22px;
-    --font-section: 13px;
-    --font-meta: 9px;
+    --font-base: 13px;
+    --font-name: 26px;
+    --font-section: 14px;
+    --font-meta: 11px;
   }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: var(--font-sans); font-size: var(--font-base); background: #f3f4f6; color: var(--text-primary); }}

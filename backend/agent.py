@@ -286,6 +286,9 @@ def generate_cover_letter(state: AgentState) -> dict:
     strong_matches = state["fit_analysis"].get("strong_matches", [])
     company_info = state.get("company_info", "")
 
+    rewritten_bullets = state.get("rewritten_bullets", [])
+    bullet_samples = "\n".join(f"- {b}" for b in rewritten_bullets[:4]) if rewritten_bullets else ""
+
     prompt = f"""Write a professional cover letter body for this job application.
 
 Candidate CV:
@@ -296,16 +299,26 @@ Job Description:
 
 Company: {company}
 Role: {role}
-{f"Company background: {company_info}" if company_info else ""}
-Candidate's strongest relevant skills: {", ".join(strong_matches[:5]) if strong_matches else "see CV"}
+{f"Company research (use this to ground motivation): {company_info}" if company_info else ""}
+Candidate's strongest skill matches for this role: {", ".join(strong_matches[:6]) if strong_matches else "see CV"}
+{f"Sample rewritten CV achievements:{chr(10)}{bullet_samples}" if bullet_samples else ""}
+
+STRUCTURE — exactly 3 paragraphs:
+
+Paragraph 1 — MOTIVATION:
+  Why this specific company and role? Draw on company research (mission, products, culture, recent work) to show genuine interest. Connect their background or values to something concrete about this employer — not generic enthusiasm. Avoid stale openers.
+
+Paragraph 2 — RELEVANT SKILLS & EXPERIENCE:
+  Pick 2–3 of the strongest skill matches above. For each, cite a specific achievement or project from the CV as proof. Tie each directly to a requirement in the job description. Be concrete — metrics, technologies, outcomes where available.
+
+Paragraph 3 — CLOSING:
+  One or two sentences: express eagerness to discuss further, brief forward-looking call to action. No fluff.
 
 RULES:
-- 3 paragraphs: (1) opening — why this specific role and company, (2) middle — 2-3 concrete achievements from their CV that are directly relevant to this role, (3) closing — brief call to action
-- Do NOT use stale openers like "I am writing to express my interest" or "I believe I would be a great fit"
-- Reference specific details from the job description or company
-- Do NOT invent skills or achievements not present in the CV
-- Keep under 280 words
-- Do not include date, address headers, salutation, or sign-off — body paragraphs only
+- Do NOT use openers like "I am writing to express my interest" or "I believe I would be a great fit"
+- Do NOT invent skills, achievements, or facts not in the CV
+- Keep under 300 words total
+- No date, address headers, salutation, or sign-off — body paragraphs only
 - First person, professional but direct
 
 Return only the cover letter body text, nothing else."""
