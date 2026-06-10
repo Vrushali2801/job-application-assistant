@@ -468,34 +468,34 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     print_css = (
         "@page{size:A4;margin:0}\n"
         "*{box-sizing:border-box;margin:0;padding:0}\n"
-        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:12.5px;color:#000;padding:10mm 13mm}\n"
+        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:#000;padding:12mm 14mm}\n"
         ".cv-page{}\n"
-        ".cv-header{text-align:center;border-bottom:1px solid #9ca3af;padding-bottom:.4rem;margin-bottom:.5rem}\n"
+        ".cv-header{text-align:center;border-bottom:1px solid #9ca3af;padding-bottom:.5rem;margin-bottom:.65rem}\n"
         ".cv-name{display:block;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
-        "font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}\n"
+        "font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}\n"
         ".cv-title-line{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.1em;margin-top:3px}\n"
+        "font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}\n"
         ".cv-contact-line{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:11px;color:#4b5563;margin-top:4px}\n"
-        ".cv-section{margin-top:.5rem}\n"
+        "font-size:11px;color:#4b5563;margin-top:5px}\n"
+        ".cv-section{margin-top:.65rem}\n"
         ".cv-section-title{font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
-        "font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
-        "border-bottom:1px solid #9ca3af;padding-bottom:2px;margin-bottom:.28rem}\n"
-        ".cv-body-text{font-size:12.5px;line-height:1.45;color:#374151}\n"
-        ".cv-exp{margin-bottom:.3rem}.cv-edu{margin-bottom:.28rem}.cv-project{margin-bottom:.28rem}\n"
+        "font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
+        "border-bottom:1px solid #9ca3af;padding-bottom:2px;margin-bottom:.35rem}\n"
+        ".cv-body-text{font-size:13px;line-height:1.5;color:#374151}\n"
+        ".cv-exp{margin-bottom:.4rem}.cv-edu{margin-bottom:.35rem}.cv-project{margin-bottom:.35rem}\n"
         ".cv-exp-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}\n"
-        ".cv-company{font-size:12.5px;font-weight:700}\n"
+        ".cv-company{font-size:13px;font-weight:700}\n"
         ".cv-meta{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
         "font-size:11px;color:#4b5563;white-space:nowrap;flex-shrink:0}\n"
-        ".cv-jobtitle{font-size:12.5px;font-weight:600;font-style:italic;margin-top:.08rem;color:#374151}\n"
-        ".cv-bullets{list-style:disc;padding-left:1.1rem;margin-top:.15rem}\n"
-        ".cv-bullet{font-size:12.5px;line-height:1.45;color:#374151;margin-bottom:.05rem}\n"
-        ".cv-proj-desc{font-size:12.5px;line-height:1.45;color:#374151;margin-top:.08rem}\n"
+        ".cv-jobtitle{font-size:13px;font-weight:600;font-style:italic;margin-top:.1rem;color:#374151}\n"
+        ".cv-bullets{list-style:disc;padding-left:1.1rem;margin-top:.2rem}\n"
+        ".cv-bullet{font-size:13px;line-height:1.5;color:#374151;margin-bottom:.1rem}\n"
+        ".cv-proj-desc{font-size:13px;line-height:1.5;color:#374151;margin-top:.1rem}\n"
         ".cv-keywords{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;"
-        "font-size:11px;color:#4b5563;margin-top:.15rem}\n"
+        "font-size:11px;color:#4b5563;margin-top:.2rem}\n"
         ".cv-skills-row{display:flex;gap:.5rem;align-items:flex-start}\n"
-        ".cv-skill-label{font-weight:700;width:100px;flex-shrink:0;font-size:12.5px}\n"
-        ".cv-skill-content{font-size:12.5px;line-height:1.45;color:#374151;flex:1}"
+        ".cv-skill-label{font-weight:700;width:100px;flex-shrink:0;font-size:13px}\n"
+        ".cv-skill-content{font-size:13px;line-height:1.5;color:#374151;flex:1}"
     )
 
     return f"""<!DOCTYPE html>
@@ -533,7 +533,9 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
   .tb-btn:disabled {{ opacity: .5; cursor: not-allowed; }}
 
   .page-wrap {{ padding: 68px 24px 48px; display: flex; justify-content: center; }}
-  .cv-page {{ background: #fff; width: 794px; min-height: 1123px; padding: 10mm; box-shadow: 0 4px 24px rgba(0,0,0,.08); }}
+  .cv-page {{ background: #fff; width: 794px; min-height: 1123px; padding: 10mm; box-shadow: 0 4px 24px rgba(0,0,0,.08); position: relative; }}
+  .cv-page::after {{ content: ''; position: absolute; left: 0; right: 0; top: 1123px; border-top: 2px dashed #cbd5e1; pointer-events: none; }}
+  .cv-page::before {{ content: 'Page 2'; position: absolute; right: 10mm; top: 1130px; font-size: 10px; color: #94a3b8; pointer-events: none; }}
 
   [contenteditable] {{ border-radius: 2px; outline: none; transition: background .1s; }}
   [contenteditable]:hover {{ background: rgba(156,163,175,.1); }}
