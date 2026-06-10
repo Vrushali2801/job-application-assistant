@@ -1534,18 +1534,17 @@ async function exportPdf() {
   btn.disabled = true;
   btn.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="animation:spin .9s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generating…`;
   try {
-    const res = await fetch(`${API}/export-pdf`, {
+    const res = await fetch(`${API}/export-html`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(analysisResult),
     });
     if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.detail||'Export failed'); }
-    const blob = await res.blob();
-    const company = (analysisResult.company_name||'analysis').replace(/\s+/g,'_');
-    const role    = (analysisResult.role_title   ||'report').replace(/\s+/g,'_');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${company}_${role}_analysis.pdf`;
-    a.click(); URL.revokeObjectURL(a.href);
+    const html = await res.text();
+    const blob = new Blob([html], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (!w) { showError('Allow pop-ups for this site to download the report.'); return; }
+    w.addEventListener('load', () => { setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 300); });
   } catch(err) { showError('Export failed: ' + err.message); }
   finally { btn.disabled = false; btn.innerHTML = orig; }
 }

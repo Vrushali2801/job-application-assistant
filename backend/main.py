@@ -684,22 +684,7 @@ async def resume_pdf(payload: dict):
     )
 
 
-@app.post("/export-pdf")
-async def export_pdf(payload: dict):
-    if _browser is None:
-        raise HTTPException(status_code=503, detail="Browser not available for PDF export.")
-
+@app.post("/export-html")
+async def export_html(payload: dict):
     html = _build_export_html(payload)
-    pdf_bytes = await asyncio.to_thread(
-        _render_pdf, html, {"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}
-    )
-
-    company  = payload.get("company_name", "analysis").replace(" ", "_")
-    role     = payload.get("role_title", "report").replace(" ", "_")
-    filename = f"{company}_{role}_analysis.pdf"
-
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return HTMLResponse(content=html)
