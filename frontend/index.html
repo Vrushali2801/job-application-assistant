@@ -1111,9 +1111,14 @@
                 <span class="micro">CV Rewrites</span>
                 <span id="bulletsCount" class="count-pill"></span>
               </div>
-              <span class="include-hint">Check to include in export</span>
             </div>
             <div id="bulletsList"></div>
+            <button id="copyAllBtn" class="btn-green" onclick="copyAll()" style="margin-top:14px">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Copy Rewrites
+            </button>
           </div>
         </div>
 
@@ -1143,20 +1148,6 @@
 
         <!-- Actions -->
         <div id="actionBtns" class="hidden fade-up">
-          <div style="display:flex;gap:10px;margin-bottom:10px">
-            <button id="copyAllBtn" class="btn-green" onclick="copyAll()">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-              </svg>
-              Copy Rewrites
-            </button>
-            <button id="exportBtn" class="btn-blue" onclick="exportPdf()">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-              Download Report
-            </button>
-          </div>
           <button id="editResumeBtn" class="btn-purple" onclick="editResume()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -1526,26 +1517,6 @@ async function editResume() {
     const win = window.open('','_blank');
     win.document.open(); win.document.write(html); win.document.close();
   } catch(err) { showError('Resume editor failed: ' + err.message); }
-  finally { btn.disabled = false; btn.innerHTML = orig; }
-}
-async function exportPdf() {
-  const btn = document.getElementById('exportBtn');
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="animation:spin .9s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generating…`;
-  try {
-    const res = await fetch(`${API}/export-html`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(analysisResult),
-    });
-    if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.detail||'Export failed'); }
-    const html = await res.text();
-    const blob = new Blob([html], {type: 'text/html'});
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, '_blank');
-    if (!w) { showError('Allow pop-ups for this site to download the report.'); return; }
-    w.addEventListener('load', () => { setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 300); });
-  } catch(err) { showError('Export failed: ' + err.message); }
   finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
