@@ -46,7 +46,10 @@ def _close_browser():
 
 @asynccontextmanager
 async def lifespan(app):
-    await asyncio.to_thread(_init_browser)
+    try:
+        await asyncio.to_thread(_init_browser)
+    except Exception as e:
+        print(f"WARNING: Browser init failed ({e}). PDF export and URL scraping will be unavailable.")
     yield
     await asyncio.to_thread(_close_browser)
 
