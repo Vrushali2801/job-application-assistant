@@ -466,10 +466,10 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     # CSS for PDF/print export — plain string so braces don't need escaping
     # @page margin:0 suppresses the browser's URL/date header and footer
     print_css = (
-        "@page{size:A4;margin:12mm 14mm}\n"
+        "@page{size:A4;margin:0}\n"
         "*{box-sizing:border-box;margin:0;padding:0}\n"
         "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:#000}\n"
-        ".cv-page{}\n"
+        ".cv-page{padding:12mm 14mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}\n"
         ".cv-header{text-align:center;border-bottom:1px solid #9ca3af;padding-bottom:.5rem;margin-bottom:.65rem}\n"
         ".cv-name{display:block;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
         "font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.1}\n"
