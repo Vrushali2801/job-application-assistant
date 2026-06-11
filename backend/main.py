@@ -466,9 +466,9 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
     # CSS for PDF/print export — plain string so braces don't need escaping
     # @page margin:0 suppresses the browser's URL/date header and footer
     print_css = (
-        "@page{size:A4;margin:0}\n"
+        "@page{size:A4;margin:12mm 14mm}\n"
         "*{box-sizing:border-box;margin:0;padding:0}\n"
-        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:#000;padding:12mm 14mm}\n"
+        "body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:#000}\n"
         ".cv-page{}\n"
         ".cv-header{text-align:center;border-bottom:1px solid #9ca3af;padding-bottom:.5rem;margin-bottom:.65rem}\n"
         ".cv-name{display:block;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif;"
@@ -581,7 +581,7 @@ def _build_resume_editor_html(s: dict, api_base: str) -> str:
 <div class="toolbar">
   <div class="toolbar-left">
     <span class="toolbar-title">Resume Editor</span>
-    <span class="toolbar-hint">Click any text to edit</span>
+    <span class="toolbar-hint">Click any text to edit &nbsp;·&nbsp; In print dialog, uncheck "Headers and footers"</span>
   </div>
   <div class="toolbar-right">
     <button class="tb-btn tb-btn-secondary" onclick="window.print()">Print</button>
